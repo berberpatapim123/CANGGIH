@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>⚡ Smart Relay</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+body{
+  font-family:'Montserrat',sans-serif;
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  color:#fff;
+  padding-bottom:50px;
+  background-color:#000;
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  transition:background-image 1s ease-in-out;
+}
+
+h1{
+  margin:20px 0 5px;
+  font-size:2.2rem;
+  text-shadow:2px 2px 10px rgba(0,0,0,0.6);
+}
+
+#greeting{
+  font-size:1.3rem;
+  font-weight:600;
+  margin-bottom:5px;
+}
+
+#clock{
+  font-size:1.1rem;
+  margin-bottom:20px;
+}
+
+.container{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  max-width:1000px;
+  gap:20px;
+}
+
+.card{
+  background:rgba(255,255,255,0.12);
+  backdrop-filter:blur(12px);
+  border-radius:20px;
+  width:220px;
+  padding:25px 20px;
+  text-align:center;
+  box-shadow:0 10px 25px rgba(0,0,0,0.4);
+  transition:0.3s;
+}
+
+.card:hover{ transform:translateY(-8px); }
+
+.status{ font-weight:600; margin-bottom:15px; }
+
+button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  font-size:16px;
+  font-weight:600;
+  color:#fff;
+  cursor:pointer;
+}
+
+button.on{ background:#1cc88a; }
+button.off{ background:#e74a3b; }
+
+#allOn,#allOff{
+  margin-top:20px;
+  padding:15px;
+  width:280px;
+  border-radius:30px;
+  font-weight:600;
+}
+
+#allOn{background:#1cc88a;}
+#allOff{background:#e74a3b;}
+
+@media(max-width:700px){
+  .card{ width:90%; }
+}
+</style>
+</head>
+
+<body>
+
+<h1>⚡ Smart Relay Home</h1>
+<div id="greeting"></div>
+<div id="clock">Loading...</div>
+
+<div class="container">
+  <div class="card">
+    <h2>Relay 1</h2>
+    <div class="status" id="status1">Loading...</div>
+    <button id="btn1">Toggle</button>
+  </div>
+  <div class="card">
+    <h2>Relay 2</h2>
+    <div class="status" id="status2">Loading...</div>
+    <button id="btn2">Toggle</button>
+  </div>
+  <div class="card">
+    <h2>Relay 3</h2>
+    <div class="status" id="status3">Loading...</div>
+    <button id="btn3">Toggle</button>
+  </div>
+  <div class="card">
+    <h2>Relay 4</h2>
+    <div class="status" id="status4">Loading...</div>
+    <button id="btn4">Toggle</button>
+  </div>
+</div>
+
+<button id="allOn">Turn All ON</button>
+<button id="allOff">Turn All OFF</button>
+
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<script>
+
+// ====== GANTI NAMA DI SINI ======
+const userName = "Boss";
+
+// 🔥 Firebase Config ASLI LO
+const firebaseConfig = {
+  apiKey: "AIzaSyCNy34WLYTBORfYxvKjIw9ua1gOEJcLaCk",
+  authDomain: "rumahhhh-d7128.firebaseapp.com",
+  databaseURL: "https://rumahhhh-d7128-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "rumahhhh-d7128",
+  storageBucket: "rumahhhh-d7128.firebasestorage.app",
+  messagingSenderId: "767050466485",
+  appId: "1:767050466485:web:195c000dd3152a7dcfaafc"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const relays=[
+{id:1,path:"relay1"},
+{id:2,path:"relay2"},
+{id:3,path:"relay3"},
+{id:4,path:"relay4"}
+];
+
+// ===== JAM + BACKGROUND =====
+function updateClock(){
+  const now = new Date();
+  const hour = now.getHours();
+
+  const time = now.toLocaleTimeString();
+  const date = now.toLocaleDateString();
+  document.getElementById("clock").innerText = `${date} | ${time}`;
+
+  let greeting = "";
+  let bgImage = "";
+
+  if(hour >= 5 && hour < 12){
+    greeting = `🌅 Selamat Pagi, ${userName}`;
+    bgImage = "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80";
+  }
+  else if(hour >= 12 && hour < 18){
+    greeting = `☀️ Selamat Siang, ${userName}`;
+    bgImage = "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80";
+  }
+  else if(hour >= 18 && hour < 19){
+    greeting = `🌇 Selamat Sore, ${userName}`;
+    bgImage = "https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=1600&q=80";
+  }
+  else{
+    greeting = `🌙 Selamat Malam, ${userName}`;
+    bgImage = "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80";
+  }
+
+  document.getElementById("greeting").innerText = greeting;
+
+  document.body.style.backgroundImage =
+    `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${bgImage}')`;
+}
+
+updateClock();
+setInterval(updateClock,1000);
+
+// ===== RELAY LOGIC =====
+relays.forEach(r=>{
+  const status=document.getElementById("status"+r.id);
+  const btn=document.getElementById("btn"+r.id);
+  const ref=db.ref("/"+r.path);
+
+  ref.on("value",snap=>{
+    let state=snap.val();
+    if(state===null){state=false; ref.set(false);}
+    status.innerText=state?"ON":"OFF";
+    btn.className=state?"on":"off";
+  });
+
+  btn.onclick=()=>ref.transaction(current=>!current);
+});
+
+document.getElementById("allOn").onclick=()=>relays.forEach(r=>db.ref("/"+r.path).set(true));
+document.getElementById("allOff").onclick=()=>relays.forEach(r=>db.ref("/"+r.path).set(false));
+
+</script>
+
+</body>
+</html>
